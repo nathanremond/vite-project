@@ -6,18 +6,17 @@
                 <article>
                     <label for="email"></label>
                     <input 
-                        v-model="data.email"
+                        v-model="email"
                         id="email"
                         type="email"
                         placeholder="Entrez votre email"
                         class="input"
                     >
-                    {{ error.errorEmail }}
                 </article>
                 <article>
                     <label for="password"></label>
                     <input 
-                        v-model="data.password"
+                        v-model="password"
                         id="password"
                         type="password"
                         placeholder="Entrez votre mot de passe"
@@ -41,31 +40,43 @@
 
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue';
+import { ref, watch } from 'vue';
+import inputValidator from '../utils/input-validator';
+import { useRouter } from 'vue-router';
 
-const data = reactive({
-    email: '',
-    password: ''
+const router = useRouter()
+
+const email = ref('')
+const password = ref('')
+
+watch(email, (val) => {
+    console.log(val, inputValidator(val, 'email'))
 })
 
-const error = reactive({
-    errorEmail: '',
-    errorPassword: ''
+watch(password, (val) => {
+    console.log(val, inputValidator(val, 'password'))
 })
 
-watch(data, (val) => {
-    console.log('Changement')
-})
+// const isUserInputValid = (input:string): boolean => {
+//     const pattern = new RegExp(".{1,30}@.{1,10}\..{1,5}$")
+//     return pattern.test(input)
+// }
 
-const isUserInputValid = (input:string): boolean => {
-    const pattern = new RegExp(".{1,30}@.{1,10}\..{1,5}$")
-    return pattern.test(input)
-}
+const submitHandler = async () => {
+    const result = await fetch('users.json')
+    const users = await result.json()
+    console.log(users)
 
-const submitHandler = () => {
-    error.errorEmail = isUserInputValid(data.email)
-        ? 'Email valide'
-        : 'Email incorrect'
+    const user = users.find((user) => user.email == email.value)
+    if(!user){
+        alert('Utilisateur non trouvé')
+        return
+    }
+    if(!(user.password == password.value)){
+        alert('Mot de passe incorrect')
+        return
+    }
+    router.push('session/' + user.id)
 }
     
 </script>
